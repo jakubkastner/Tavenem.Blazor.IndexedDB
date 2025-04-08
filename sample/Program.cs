@@ -15,22 +15,23 @@ builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.H
 var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
 options.TypeInfoResolverChain.Add(ItemContext.Default.WithAddedModifier(static typeInfo =>
 {
-    if (typeInfo.Type == typeof(IIdItem))
-    {
-        typeInfo.PolymorphismOptions ??= new JsonPolymorphismOptions
-        {
-            IgnoreUnrecognizedTypeDiscriminators = true,
-            UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FallBackToNearestAncestor,
-        };
-        typeInfo.PolymorphismOptions.DerivedTypes.Add(new JsonDerivedType(typeof(Item), Item.ItemTypeName));
-    }
+	if (typeInfo.Type == typeof(IIdItem))
+	{
+		typeInfo.PolymorphismOptions ??= new JsonPolymorphismOptions
+		{
+			IgnoreUnrecognizedTypeDiscriminators = true,
+			UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FallBackToNearestAncestor,
+		};
+		typeInfo.PolymorphismOptions.DerivedTypes.Add(new JsonDerivedType(typeof(Item), Item.ItemTypeName));
+	}
 }));
 
 builder.Services.AddIndexedDbService();
 builder.Services.AddIndexedDb(
-    "Tavenem.Blazor.IndexedDB.Sample",
-    [Tavenem.Blazor.IndexedDB.Sample.Pages.Index.StoreName],
-    1,
-    options);
+	"Tavenem.Blazor.IndexedDB.Sample",
+	[Tavenem.Blazor.IndexedDB.Sample.Pages.Index.StoreName],
+	1,
+	options);
+builder.Services.AddIndexedDb(MusicReleasesDb.Name, MusicReleasesDb.GetDatabases(), MusicReleasesDb.Version);
 
 await builder.Build().RunAsync().ConfigureAwait(false);

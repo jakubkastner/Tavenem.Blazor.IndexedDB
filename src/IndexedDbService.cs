@@ -478,6 +478,53 @@ public class IndexedDbService(IJSRuntime jsRuntime) : IAsyncDisposable
                 .ConfigureAwait(false);
         }
     }
+    /// <summary>
+    /// Upserts the given <paramref name="items"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of <see cref="IIdItem"/> to upsert.</typeparam>
+    /// <param name="store">The <see cref="IndexedDbStore"/>.</param>
+    /// <param name="items">The items to store.</param>
+    /// <returns>
+    /// <see langword="true"/> if the items was successfully persisted to the data store; otherwise
+    /// <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// If the items is <see langword="null"/>, does nothing and returns <see langword="true"/>, to
+    /// indicate that the operation did not fail (even though no storage operation took place,
+    /// neither did any failure).
+    /// </para>
+    /// <para>
+    /// Note: this differs from <see cref="StoreAsync{T}(IndexedDbStore, T)"/> in that this method
+    /// expects that <paramref name="items"/> implements <see cref="ISet{IIdItem}"/> where T is <see cref="IIdItem"/>, and serializes it
+    /// accordingly, whereas <see cref="StoreAsync{T}(IndexedDbStore, T)"/> does not.
+    /// </para>
+    /// </remarks>
+    public async Task<bool> StoreItemsAsync<T>(IndexedDbStore store, ISet<T>? items) where T : class, IIdItem
+    {
+        if (items is null)
+        {
+            return true;
+        }
+
+        IEnumerable<string> itemsJson;
+        if (store.Database.JsonSerializerOptions is null)
+        {
+            itemsJson = items.Select(item => JsonSerializer.Serialize(item));
+        }
+        else
+        {
+            itemsJson = items.Select(item => JsonSerializer.Serialize(item, store.Database.JsonSerializerOptions));
+        }
+
+        // Explicitly serialize before invoking because T is passed as a plain object, and
+        // implements IIdItem, which causes the default serialization behavior to serialize only
+        // the interface properties.
+        var module = await _moduleTask.Value.ConfigureAwait(false);
+        return await module
+            .InvokeAsync<bool>("putValues", store.Info, itemsJson)
+            .ConfigureAwait(false);
+    }
 
     /// <summary>
     /// Upserts the given <paramref name="item"/>.

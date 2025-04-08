@@ -25,24 +25,24 @@ async function openDatabase(databaseInfo: DatabaseInfo) {
         const database = await openDB(
             databaseInfo.databaseName,
             databaseInfo.version, {
-                upgrade(db) {
-                    if (databaseInfo.storeNames) {
-                        for (const storeName of databaseInfo.storeNames) {
-                            if (!db.objectStoreNames.contains(storeName)) {
-                                db.createObjectStore(storeName, {
-                                    keyPath: databaseInfo.keyPath,
-                                });
-                            }
+            upgrade(db) {
+                if (databaseInfo.storeNames) {
+                    for (const storeName of databaseInfo.storeNames) {
+                        if (!db.objectStoreNames.contains(storeName)) {
+                            db.createObjectStore(storeName, {
+                                keyPath: databaseInfo.keyPath,
+                            });
                         }
                     }
-                    if (db.objectStoreNames.length == 0
-                        && !db.objectStoreNames.contains(databaseInfo.databaseName)) {
-                        db.createObjectStore(databaseInfo.databaseName, {
-                            keyPath: databaseInfo.keyPath,
-                        });
-                    }
                 }
-            });
+                if (db.objectStoreNames.length == 0
+                    && !db.objectStoreNames.contains(databaseInfo.databaseName)) {
+                    db.createObjectStore(databaseInfo.databaseName, {
+                        keyPath: databaseInfo.keyPath,
+                    });
+                }
+            }
+        });
         return database;
     } catch (e) {
         console.error(e);
@@ -123,8 +123,58 @@ export async function getAllStrings(databaseInfo: DatabaseInfo) {
         return [];
     }
 }
+export async function getBatch(databaseInfo: DatabaseInfo, reset: boolean): Promise<any[]> {
+    const db = await openDatabase(databaseInfo);
+    if (!db) {
+        return [];
+    }
+    const cursorKey = databaseInfo.databaseName + '.' + databaseInfo.storeName;
+    if (reset) {
+        delete cursors[cursorKey];
+    }
+    let cursorInfo = cursors[cursorKey];
+    if (!cursorInfo || cursorInfo.db.version !== databaseInfo.version) {
+        try {
+            const transaction = db.transaction(databaseInfo.storeName ?? databaseInfo.databaseName, 'readonly');
+            const store = transaction.objectStore(databaseInfo.storeName ?? databaseInfo.databaseName);
+            const cursor = await store.openCursor();
 
-export async function getBatch(databaseInfo: DatabaseInfo, reset: boolean) {
+            cursorInfo = { db: databaseInfo, cursor };
+            cursors[cursorKey] = cursorInfo;
+        } catch (e) {
+            console.error('Error opening cursor:', e);
+            return [];
+        }
+    }
+    if (!cursorInfo.cursor) {
+        return [];
+    }
+
+    const items: any[] = [];
+
+    try {
+        while (items.length < 20) {
+            const transaction = db.transaction(databaseInfo.storeName ?? databaseInfo.databaseName, 'readonly');
+            const store = transaction.objectStore(databaseInfo.storeName ?? databaseInfo.databaseName);
+            const cursor = await store.openCursor(cursorInfo.cursor.key);
+
+            if (!cursor) {
+                break;
+            }
+
+            items.push(cursor.value);
+            await cursor.continue();
+            cursorInfo.cursor = cursor;
+        }
+    } catch (e) {
+        console.error('Error iterating cursor:', e);
+    }
+
+    cursors[cursorKey] = cursorInfo;
+    return items;
+}
+
+/*export async function getBatch(databaseInfo: DatabaseInfo, reset: boolean) {
     const db = await openDatabase(databaseInfo);
     if (!db) {
         return [];
@@ -159,7 +209,7 @@ export async function getBatch(databaseInfo: DatabaseInfo, reset: boolean) {
     }
     cursors[cursorKey] = cursorInfo;
     return items;
-}
+}*/
 
 export async function getBatchStrings(databaseInfo: DatabaseInfo, reset: boolean) {
     const db = await openDatabase(databaseInfo);

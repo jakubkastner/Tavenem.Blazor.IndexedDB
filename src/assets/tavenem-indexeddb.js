@@ -116,30 +116,38 @@ export async function getBatch(databaseInfo, reset) {
         delete cursors[cursorKey];
     }
     let cursorInfo = cursors[cursorKey];
-    if (!cursorInfo || cursorInfo.db.version != databaseInfo.version) {
+    if (!cursorInfo || cursorInfo.db.version !== databaseInfo.version) {
         try {
-            const cursor = await db.transaction(databaseInfo.storeName ?? databaseInfo.databaseName).store.openCursor();
-            cursorInfo = {
-                db: databaseInfo,
-                cursor,
-            };
+            const transaction = db.transaction(databaseInfo.storeName ?? databaseInfo.databaseName, 'readonly');
+            const store = transaction.objectStore(databaseInfo.storeName ?? databaseInfo.databaseName);
+            const cursor = await store.openCursor();
+            cursorInfo = { db: databaseInfo, cursor };
+            cursors[cursorKey] = cursorInfo;
         }
         catch (e) {
-            console.error(e);
+            console.error('Error opening cursor:', e);
+            return [];
         }
     }
-    if (!cursorInfo) {
+    if (!cursorInfo.cursor) {
         return [];
     }
     const items = [];
     try {
-        while (cursorInfo.cursor && items.length < 20) {
-            items.push(cursorInfo.cursor.value);
-            cursorInfo.cursor = await cursorInfo.cursor.continue();
+        while (items.length < 20) {
+            const transaction = db.transaction(databaseInfo.storeName ?? databaseInfo.databaseName, 'readonly');
+            const store = transaction.objectStore(databaseInfo.storeName ?? databaseInfo.databaseName);
+            const cursor = await store.openCursor(cursorInfo.cursor.key);
+            if (!cursor) {
+                break;
+            }
+            items.push(cursor.value);
+            await cursor.continue();
+            cursorInfo.cursor = cursor;
         }
     }
     catch (e) {
-        console.error(e);
+        console.error('Error iterating cursor:', e);
     }
     cursors[cursorKey] = cursorInfo;
     return items;
