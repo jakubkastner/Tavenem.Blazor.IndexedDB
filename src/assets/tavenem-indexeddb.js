@@ -230,4 +230,21 @@ export async function putValue(databaseInfo, value) {
         return false;
     }
 }
+export async function putValues(databaseInfo, values) {
+    debugger;
+    const db = await openDatabase(databaseInfo);
+    if (!db) {
+        return false;
+    }
+    try {
+        for (const value of values) {
+            await db.put(databaseInfo.storeName ?? databaseInfo.databaseName, JSON.parse(value));
+        }
+        return true;
+    }
+    catch (e) {
+        console.error(e);
+        return false;
+    }
+}
 //# sourceMappingURL=tavenem-indexeddb.js.map

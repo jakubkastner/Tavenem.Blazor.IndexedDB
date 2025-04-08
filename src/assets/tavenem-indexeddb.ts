@@ -287,3 +287,20 @@ export async function putValue(databaseInfo: DatabaseInfo, value: string) {
         return false;
     }
 }
+
+export async function putValues(databaseInfo: DatabaseInfo, values: string[]) {
+    debugger;
+    const db = await openDatabase(databaseInfo);
+    if (!db) {
+        return false;
+    }
+    try {
+        for (const value of values) {
+            await db.put(databaseInfo.storeName ?? databaseInfo.databaseName, JSON.parse(value));
+        }
+        return true;
+    } catch (e) {
+        console.error(e);
+        return false;
+    }
+}
