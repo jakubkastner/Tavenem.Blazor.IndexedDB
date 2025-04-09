@@ -1,5 +1,4 @@
-﻿// worker.ts
-import { openDB, deleteDB, IDBPCursorWithValue } from 'idb';
+﻿import { openDB, deleteDB, IDBPCursorWithValue } from 'idb';
 
 interface DatabaseInfo {
     databaseName: string;
@@ -331,6 +330,6 @@ self.onmessage = async (event: MessageEvent) => {
             self.postMessage({ type: 'putValuesResult', success: putValuesResult });
             break;
         default:
-            console.error('Neznámý typ zprávy:', event.data.type);
+            console.error('Unkown message type:', event.data.type);
     }
 };

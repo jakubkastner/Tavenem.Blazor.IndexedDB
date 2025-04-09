@@ -7,7 +7,7 @@ export async function clear(databaseInfo) {
                 resolve(event.data.success);
             }
             else {
-                reject('Neznámý typ zprávy');
+                reject('Unkown message type');
             }
         };
     });
@@ -20,7 +20,7 @@ export async function count(databaseInfo) {
                 resolve(event.data.count);
             }
             else {
-                reject('Neznámý typ zprávy');
+                reject('Unkown message type');
             }
         };
     });
@@ -33,7 +33,7 @@ export async function deleteDatabase(name) {
                 resolve(event.data.success);
             }
             else {
-                reject('Neznámý typ zprávy');
+                reject('Unkown message type');
             }
         };
     });
@@ -46,7 +46,7 @@ export async function deleteValue(databaseInfo, key) {
                 resolve(event.data.success);
             }
             else {
-                reject('Neznámý typ zprávy');
+                reject('Unkown message type');
             }
         };
     });
@@ -59,7 +59,7 @@ export async function getAll(databaseInfo) {
                 resolve(event.data.items);
             }
             else {
-                reject('Neznámý typ zprávy');
+                reject('Unkown message type');
             }
         };
     });
@@ -72,7 +72,7 @@ export async function getAllStrings(databaseInfo) {
                 resolve(event.data.items);
             }
             else {
-                reject('Neznámý typ zprávy');
+                reject('Unkown message type');
             }
         };
     });
@@ -85,7 +85,7 @@ export async function getBatch(databaseInfo, reset) {
                 resolve(event.data.items);
             }
             else {
-                reject('Neznámý typ zprávy');
+                reject('Unkown message type');
             }
         };
     });
@@ -98,7 +98,7 @@ export async function getBatchStrings(databaseInfo, reset) {
                 resolve(event.data.items);
             }
             else {
-                reject('Neznámý typ zprávy');
+                reject('Unkown message type');
             }
         };
     });
@@ -111,7 +111,7 @@ export async function getValue(databaseInfo, key) {
                 resolve(event.data.value);
             }
             else {
-                reject('Neznámý typ zprávy');
+                reject('Unkown message type');
             }
         };
     });
@@ -124,7 +124,7 @@ export async function getValueString(databaseInfo, key) {
                 resolve(event.data.value);
             }
             else {
-                reject('Neznámý typ zprávy');
+                reject('Unkown message type');
             }
         };
     });
@@ -137,22 +137,20 @@ export async function putValue(databaseInfo, value) {
                 resolve(event.data.success);
             }
             else {
-                reject('Neznámý typ zprávy');
+                reject('Unkown message type');
             }
         };
     });
 }
 export async function putValues(databaseInfo, values) {
-    console.log('Odesílám zprávu workeru...');
     return new Promise((resolve, reject) => {
         worker.postMessage({ type: 'putValues', databaseInfo, values });
         worker.onmessage = (event) => {
             if (event.data.type === 'putValuesResult') {
-                console.log('Zpráva přijata zpět:', event.data.success);
                 resolve(event.data.success);
             }
             else {
-                reject('Neznámý typ zprávy');
+                reject('Unkown message type');
             }
         };
     });

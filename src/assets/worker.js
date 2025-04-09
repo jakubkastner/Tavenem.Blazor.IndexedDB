@@ -306,7 +306,7 @@ self.onmessage = async (event) => {
             self.postMessage({ type: 'putValuesResult', success: putValuesResult });
             break;
         default:
-            console.error('Neznámý typ zprávy:', event.data.type);
+            console.error('Unkown message type:', event.data.type);
     }
 };
 //# sourceMappingURL=worker.js.map
