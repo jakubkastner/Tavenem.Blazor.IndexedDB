@@ -228,7 +228,7 @@ public partial class Index
 		var store = indexedDb[MusicReleasesDb.Artists]!;
 
 		var rel = new HashSet<MusicRelease>();
-		for (var i = 0; i < 200; i++)
+		for (var i = 0; i < 20000; i++)
 		{
 			var release = new MusicRelease
 			{
@@ -240,7 +240,7 @@ public partial class Index
 			};
 			rel.Add(release);
 		}
-		//await _dbService.StoreItemsAsync(store, rel);
+		await _dbService.StoreItemsAsync(store, rel);
 	}
 	private async Task MusicReleases2()
 	{
